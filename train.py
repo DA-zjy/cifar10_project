@@ -68,10 +68,15 @@ def main():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=config.LEARNING_RATE)
     
+    # 学习率衰减调度器
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, verbose=True)
+
     print("开始训练...")
     for epoch in range(config.EPOCHS):
         train_loss = train_one_epoch(model, config.DEVICE, train_loader, optimizer, criterion)
         test_loss, accuracy = evaluate(model, config.DEVICE, test_loader, criterion)
+        
+        scheduler.step(test_loss)
         
         print(f"Epoch {epoch+1}/{config.EPOCHS} | "
               f"Train Loss: {train_loss:.4f} | "

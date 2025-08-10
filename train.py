@@ -8,7 +8,7 @@ from tqdm import tqdm # 引入tqdm，一个强大的进度条工具
 
 # 从我们自己的模块中导入
 import config
-from model import SimpleCNN
+from model import ResNet34
 from dataset import get_dataloaders
 
 def train_one_epoch(model, device, train_loader, optimizer, criterion):
@@ -62,21 +62,21 @@ def main():
     train_loader, test_loader = get_dataloaders()
     
     # 实例化模型并移动到设备
-    model = SimpleCNN().to(config.DEVICE)
+    model = ResNet34().to(config.DEVICE)
     
     # 定义损失函数和优化器
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=config.LEARNING_RATE)
-    
+    criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+    optimizer = optim.SGD(model.parameters(), lr=config.LEARNING_RATE, momentum=0.9, weight_decay=5e-4)
     # 学习率衰减调度器
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, verbose=True)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.EPOCHS)
+    
 
     print("开始训练...")
     for epoch in range(config.EPOCHS):
         train_loss = train_one_epoch(model, config.DEVICE, train_loader, optimizer, criterion)
         test_loss, accuracy = evaluate(model, config.DEVICE, test_loader, criterion)
         
-        scheduler.step(test_loss)
+        scheduler.step()
         
         print(f"Epoch {epoch+1}/{config.EPOCHS} | "
               f"Train Loss: {train_loss:.4f} | "

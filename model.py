@@ -55,7 +55,6 @@ class ResNet(nn.Module):
             nn.Dropout(0.5),
             nn.Linear(1024, num_classes),
         )
-
     def _make_layer(self, block, out_channels, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
@@ -78,5 +77,9 @@ class ResNet(nn.Module):
 def ResNet18(num_classes=10):
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes)
 
+# 在 model.py 中，可以新增一个函数
+def ResNet34(num_classes=10):
+    # ResNet34 的结构是 [3, 4, 6, 3]
+    return ResNet(BasicBlock, [3, 4, 6, 3], num_classes)
+
 model = ResNet18()
-print(model)

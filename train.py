@@ -31,7 +31,7 @@ def train_one_epoch(model, device, train_loader, optimizer, criterion):
     return epoch_loss
 
 def evaluate(model, device, test_loader, criterion):
-    """在测试集上评估模型"""
+    """在测试集上评估模型（使用测试时增强）"""
     model.eval() # 设置为评估模式
     running_loss = 0.0
     correct = 0
@@ -39,11 +39,25 @@ def evaluate(model, device, test_loader, criterion):
     with torch.no_grad():
         for images, labels in tqdm(test_loader, desc="Evaluating"):
             images, labels = images.to(device), labels.to(device)
-            outputs = model(images)
-            loss = criterion(outputs, labels)
+            
+            # 原始图片预测
+            outputs_original = model(images)
+            probs_original = torch.softmax(outputs_original, dim=1)
+            
+            # 水平翻转图片预测
+            images_flipped = torch.flip(images, dims=[3])  # 沿宽度维度翻转
+            outputs_flipped = model(images_flipped)
+            probs_flipped = torch.softmax(outputs_flipped, dim=1)
+            
+            # 融合预测概率（平均）
+            avg_probs = (probs_original + probs_flipped) / 2
+            
+            # 计算损失（使用原始图片的输出）
+            loss = criterion(outputs_original, labels)
             running_loss += loss.item() * images.size(0)
             
-            _, predicted = torch.max(outputs.data, 1)
+            # 基于融合概率获得最终预测
+            _, predicted = torch.max(avg_probs, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
             

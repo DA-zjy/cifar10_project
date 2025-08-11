@@ -1,0 +1,12 @@
+# requirements.txt
+
+# PyTorch Core
+torch==2.5.1
+torchvision==0.20.1
+
+# Utilities
+tqdm
+Pillow
+
+# It's good practice to include numpy explicitly
+numpy
